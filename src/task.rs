@@ -1,14 +1,14 @@
-use std::fmt::{Display, Formatter};
+use crate::tag::Tag;
+use colored::Colorize;
 use rusqlite::ToSql;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
-use colored::Colorize;
-use crate::tag::Tag;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum TaskStatus {
     Todo,
     Doing,
-    Done
+    Done,
 }
 
 impl ToSql for TaskStatus {
@@ -16,7 +16,7 @@ impl ToSql for TaskStatus {
         let s = match self {
             TaskStatus::Todo => 0,
             TaskStatus::Doing => 1,
-            TaskStatus::Done => 2
+            TaskStatus::Done => 2,
         };
         Ok(ToSqlOutput::from(s))
     }
@@ -29,8 +29,8 @@ impl FromSql for TaskStatus {
             1 => Ok(TaskStatus::Doing),
             2 => Ok(TaskStatus::Done),
             other => Err(FromSqlError::Other(
-                format!("Invalid status: {}", other).into()
-            ))
+                format!("Invalid status: {}", other).into(),
+            )),
         }
     }
 }
@@ -55,13 +55,15 @@ pub struct Task {
     pub id: Option<String>,
     pub name: String,
     pub status: TaskStatus,
-    pub tags: Vec<Tag>
+    pub tags: Vec<Tag>,
 }
 
 impl Display for Task {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let id = self.id.clone().map_or("-".to_string(), |id| id.to_string());
-        let tags = self.tags.iter()
+        let tags = self
+            .tags
+            .iter()
             .map(|t| t.to_string())
             .collect::<Vec<_>>()
             .join(", ");
@@ -75,7 +77,7 @@ impl Task {
             id: None,
             name,
             status: TaskStatus::Todo,
-            tags: vec![]
+            tags: vec![],
         }
     }
 

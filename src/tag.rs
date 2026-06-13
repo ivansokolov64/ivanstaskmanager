@@ -1,7 +1,7 @@
-use std::fmt::{Display, Formatter};
 use colored::{Color, Colorize};
 use rusqlite::ToSql;
 use rusqlite::types::{FromSql, FromSqlResult, ToSqlOutput, ValueRef};
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Copy)]
 pub enum TagColor {
@@ -11,7 +11,7 @@ pub enum TagColor {
     Blue,
     Magenta,
     Cyan,
-    White
+    White,
 }
 
 impl From<&str> for TagColor {
@@ -24,7 +24,7 @@ impl From<&str> for TagColor {
             "magenta" => TagColor::Magenta,
             "cyan" => TagColor::Cyan,
             "white" => TagColor::White,
-            _ => TagColor::White
+            _ => TagColor::White,
         }
     }
 }
@@ -39,7 +39,7 @@ impl FromSql for TagColor {
             4 => Ok(TagColor::Magenta),
             5 => Ok(TagColor::Cyan),
             6 => Ok(TagColor::White),
-            _ => Ok(TagColor::White)
+            _ => Ok(TagColor::White),
         }
     }
 }
@@ -69,16 +69,14 @@ impl From<TagColor> for Color {
             TagColor::Blue => Color::Blue,
             TagColor::Magenta => Color::BrightMagenta,
             TagColor::Cyan => Color::Cyan,
-            TagColor::White  => Color::White,
+            TagColor::White => Color::White,
         }
     }
 }
 
-
-
 pub struct Tag {
     pub name: String,
-    pub color: TagColor
+    pub color: TagColor,
 }
 
 impl Display for Tag {
@@ -86,9 +84,3 @@ impl Display for Tag {
         write!(f, "{}", self.name.color(Color::from(self.color)))
     }
 }
-
-
-
-
-
-
