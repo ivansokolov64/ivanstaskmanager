@@ -103,14 +103,6 @@ impl TaskRepo {
 
     }
 
-    pub fn set_status(&self, task_id: String, status: TaskStatus) -> rusqlite::Result<()> {
-        self.conn.execute(
-            "UPDATE tasks SET status = ?1 WHERE id = ?2",
-            (status, task_id)
-        )?;
-        Ok(())
-    }
-
     pub fn list(&self) -> rusqlite::Result<Vec<Task>> {
         let mut stmt = self.conn.prepare("SELECT id, name, status FROM tasks")?;
 
@@ -148,6 +140,36 @@ impl TaskRepo {
 
     pub fn delete(&self, task_id: String) -> rusqlite::Result<()> {
         self.conn.execute("DELETE FROM tasks WHERE id = ?1", (task_id,))?;
+        Ok(())
+    }
+
+    pub fn set_status(&self, task_id: String, status: TaskStatus) -> rusqlite::Result<()> {
+        self.conn.execute(
+            "UPDATE tasks SET status = ?1 WHERE id = ?2",
+            (status, task_id)
+        )?;
+        Ok(())
+    }
+
+    pub fn add_tag(&self, task_id: &String, tag: &Tag) -> rusqlite::Result<()> {
+
+        self.conn.execute(
+            "INSERT OR IGNORE INTO tags (name, color) VALUES (?1, ?2)",
+            params![tag.name, tag.color],
+        )?;
+
+        self.conn.execute(
+            "INSERT OR IGNORE INTO task_tags (task_id, tag) VALUES (?1, ?2)",
+            params![task_id, tag.name]
+        )?;
+
+        Ok(())
+
+    }
+
+    pub fn remove_tag(&self, task_id: &String, tag: &String) -> rusqlite::Result<()> {
+        self.conn.execute(
+            "DELETE FROM task_tags WHERE task_id = ?1 AND tag = ?2", params![task_id, tag])?;
         Ok(())
     }
 

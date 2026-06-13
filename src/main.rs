@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use crate::db::{open_db, TaskRepo};
 use clap::{Parser, Subcommand};
+use crate::tag::{Tag, TagColor};
 use crate::task::{Task, TaskStatus};
 
 pub mod task;
@@ -34,8 +35,14 @@ enum Command {
     },
     Delete {
         id: String
+    },
+    Tag {
+        task_id: String,
+        #[arg(num_args=1..,  allow_hyphen_values = true)]
+        changes: Vec<String>
     }
 }
+
 
 fn print_task_list(task_list: &TaskRepo) -> Result<()> {
     let tasks = task_list.list()
@@ -47,6 +54,32 @@ fn print_task_list(task_list: &TaskRepo) -> Result<()> {
     }
 
     Ok(())
+}
+
+struct TagChanges {
+    add: Vec<Tag>,
+    remove: Vec<String>,
+}
+fn parse_tag_changes(changes: &[String]) -> Result<TagChanges> {
+    let mut add = vec![];
+    let mut remove = vec![];
+
+    for change in changes {
+        if let Some(rest) = change.strip_prefix('+') {
+            let (name, color) = match rest.split_once(':') {
+                Some((name, color_str)) => (name.to_string(), TagColor::from(color_str)),
+                None                    => (rest.to_string(), TagColor::White),
+            };
+
+            add.push(Tag { name, color });
+
+        } else if let Some(tag) = change.strip_prefix('-') {
+            remove.push(tag.to_string());
+        } else {
+            anyhow::bail!("tags must start with + to add or - to remove, got '{}'", change);
+        }
+    }
+    Ok(TagChanges { add, remove })
 }
 
 fn main() -> Result<()> {
@@ -103,7 +136,19 @@ fn main() -> Result<()> {
             Ok(())
 
         }
-    }
+        Command::Tag { task_id, changes } => {
+            let tag_changes = parse_tag_changes(&changes)?;
 
+            for tag in &tag_changes.add {
+                task_list.add_tag(&task_id, tag)?;
+            }
+            for tag in &tag_changes.remove {
+                task_list.remove_tag(&task_id, tag)?;
+            }
+
+            Ok(())
+
+        }
+    }
 }
 

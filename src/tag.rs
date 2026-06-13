@@ -14,6 +14,21 @@ pub enum TagColor {
     White
 }
 
+impl From<&str> for TagColor {
+    fn from(value: &str) -> Self {
+        match value {
+            "red" => TagColor::Red,
+            "green" => TagColor::Green,
+            "yellow" => TagColor::Yellow,
+            "blue" => TagColor::Blue,
+            "magenta" => TagColor::Magenta,
+            "cyan" => TagColor::Cyan,
+            "white" => TagColor::White,
+            _ => TagColor::White
+        }
+    }
+}
+
 impl FromSql for TagColor {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
         match value.as_i64()? {
@@ -52,12 +67,14 @@ impl From<TagColor> for Color {
             TagColor::Green => Color::Green,
             TagColor::Yellow => Color::Yellow,
             TagColor::Blue => Color::Blue,
-            TagColor::Magenta => Color::Magenta,
+            TagColor::Magenta => Color::BrightMagenta,
             TagColor::Cyan => Color::Cyan,
             TagColor::White  => Color::White,
         }
     }
 }
+
+
 
 pub struct Tag {
     pub name: String,
@@ -69,4 +86,9 @@ impl Display for Tag {
         write!(f, "{}", self.name.color(Color::from(self.color)))
     }
 }
+
+
+
+
+
 
