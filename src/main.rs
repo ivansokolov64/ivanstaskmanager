@@ -5,6 +5,7 @@ use crate::task::{Task, TaskStatus};
 
 pub mod task;
 pub mod db;
+pub mod tag;
 
 // Set up the clap struct for our CLI
 #[derive(Parser)]
@@ -22,12 +23,30 @@ enum Command {
         name: String
     },
     List,
+    Todo {
+        id: String
+    },
     Doing {
         id: String
     },
     Done {
         id: String
+    },
+    Delete {
+        id: String
     }
+}
+
+fn print_task_list(task_list: &TaskRepo) -> Result<()> {
+    let tasks = task_list.list()
+        .context("Failed to get task list")?;
+
+    println!("ALL TASKS ({})", tasks.len());
+    for task in tasks {
+        println!("{task}");
+    }
+
+    Ok(())
 }
 
 fn main() -> Result<()> {
@@ -49,46 +68,41 @@ fn main() -> Result<()> {
             let id = task_list.add(&task)
                 .context("Failed to add task")?;
             task.id = Some(id);
-            println!("{task}");
+            print_task_list(&task_list)?;
             Ok(())
         }
         Command::List => {
-            let tasks = task_list.list()
-                .context("Failed to get task list")?;
-
-            println!("ALL TASKS ({})", tasks.len());
-            for task in tasks {
-                println!("{task}");
-            }
+            print_task_list(&task_list)?;
             Ok(())
         },
         Command::Doing {id} => {
             task_list.set_status(id, TaskStatus::Doing)?;
 
-            let tasks = task_list.list()
-                .context("Failed to get task list")?;
-
-            println!("ALL TASKS ({})", tasks.len());
-            for task in tasks {
-                println!("{task}");
-            }
+            print_task_list(&task_list)?;
             Ok(())
         },
 
         Command::Done {id} => {
             task_list.set_status(id, TaskStatus::Done)?;
 
-            let tasks = task_list.list()
-                .context("Failed to get task list")?;
-
-            println!("ALL TASKS ({})", tasks.len());
-            for task in tasks {
-                println!("{task}");
-            }
+            print_task_list(&task_list)?;
             Ok(())
         },
 
+        Command::Todo { id } => {
+            task_list.set_status(id, TaskStatus::Todo)?;
 
+            print_task_list(&task_list)?;
+            Ok(())
+        }
+        Command::Delete { id } => {
+            task_list.delete(id)
+                .context("Failed to delete task")?;
+
+            print_task_list(&task_list)?;
+            Ok(())
+
+        }
     }
 
 }

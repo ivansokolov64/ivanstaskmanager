@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter};
 use rusqlite::ToSql;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use colored::Colorize;
+use crate::tag::Tag;
 
 #[derive(Debug)]
 pub enum TaskStatus {
@@ -53,13 +54,18 @@ impl Display for TaskStatus {
 pub struct Task {
     pub id: Option<String>,
     pub name: String,
-    pub status: TaskStatus
+    pub status: TaskStatus,
+    pub tags: Vec<Tag>
 }
 
 impl Display for Task {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let id = self.id.clone().map_or("-".to_string(), |id| id.to_string());
-        write!(f, "{} {} ({})", self.status, self.name, id)
+        let tags = self.tags.iter()
+            .map(|t| t.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        write!(f, "{} {} ({}) [{}]", self.status, self.name, id, tags)
     }
 }
 
@@ -68,7 +74,12 @@ impl Task {
         Self {
             id: None,
             name,
-            status: TaskStatus::Todo
+            status: TaskStatus::Todo,
+            tags: vec![]
         }
+    }
+
+    pub fn add_tag(&mut self, tag: Tag) {
+        self.tags.push(tag);
     }
 }
